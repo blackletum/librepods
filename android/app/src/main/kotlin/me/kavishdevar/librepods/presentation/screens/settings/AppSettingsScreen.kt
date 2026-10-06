@@ -16,7 +16,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package me.kavishdevar.librepods.presentation.screens
+package me.kavishdevar.librepods.presentation.screens.settings
 
 import android.content.Intent
 import android.net.Uri
@@ -66,6 +66,7 @@ import me.kavishdevar.librepods.presentation.components.common.AppInfoCard
 import me.kavishdevar.librepods.presentation.components.common.DeviceInfoCard
 import me.kavishdevar.librepods.presentation.components.primitives.StyledBottomSheet
 import me.kavishdevar.librepods.presentation.components.primitives.StyledButton
+import me.kavishdevar.librepods.presentation.components.primitives.StyledConfirmationDialog
 import me.kavishdevar.librepods.presentation.components.primitives.StyledIconButton
 import me.kavishdevar.librepods.presentation.components.primitives.StyledInputField
 import me.kavishdevar.librepods.presentation.components.primitives.StyledList
@@ -88,7 +89,8 @@ fun AppSettingsScreen(
     navigateToReleaseNotesScreen: () -> Unit,
     navigateToBleSettingsScreen: () -> Unit,
     navigateToAppAppearanceScreen: () -> Unit,
-    navigateToAppAccessibilityScreen: () -> Unit
+    navigateToAppAccessibilityScreen: () -> Unit,
+    navigateToIslandSettingsScreen: () -> Unit
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -202,6 +204,15 @@ fun AppSettingsScreen(
                 contentText = stringResource(R.string.accessibility),
                 onClick = navigateToAppAccessibilityScreen
             )
+
+            if (state.state.hasConnectedToAACP) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                StyledListItem(
+                    contentText = stringResource(R.string.island_settings),
+                    onClick = navigateToIslandSettingsScreen
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -331,6 +342,14 @@ fun AppSettingsScreen(
                 onClick = navigateToOpenSourceLicenses,
             )
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            StyledListItem(
+                contentText =  stringResource(R.string.reset_app_settings),
+                onClick = viewModel::showResetDialog,
+            )
+
+
             Spacer(modifier = Modifier.height(bottomPadding))
 
 //        if (state.showCameraDialog) {
@@ -399,6 +418,19 @@ fun AppSettingsScreen(
 //        }
         }
     }
+
+    val showResetDialog = remember(state.showResetDialog) { mutableStateOf(state.showResetDialog) }
+
+    StyledConfirmationDialog(
+        showDialog = showResetDialog,
+        title = stringResource(R.string.reset_app_settings),
+        message = stringResource(R.string.reset_app_settings_description),
+        confirmText = stringResource(R.string.reset),
+        dismissText = stringResource(R.string.cancel),
+        onConfirm = viewModel::resetAppSettings,
+        onDismiss = viewModel::resetDialogDismissed,
+        backdrop = backdrop
+    )
 
     StyledBottomSheet(
         visible = contactBottomSheet.value,

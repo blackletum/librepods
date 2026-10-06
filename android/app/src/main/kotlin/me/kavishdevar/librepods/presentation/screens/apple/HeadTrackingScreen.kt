@@ -86,6 +86,7 @@ import me.kavishdevar.librepods.presentation.icons.LocalIcons
 import me.kavishdevar.librepods.presentation.icons.MaterialIcons
 import me.kavishdevar.librepods.presentation.design.DesignSystem
 import me.kavishdevar.librepods.presentation.design.LocalDesignSystem
+import me.kavishdevar.librepods.presentation.utils.LocalDebugMode
 import me.kavishdevar.librepods.presentation.viewmodel.AppleViewModel
 import me.kavishdevar.librepods.utils.HeadTracking
 import kotlin.math.abs
@@ -265,7 +266,7 @@ fun HeadTrackingScreen(
                 }
             }
 
-            if (uiState.appSettings.debugMode) {
+            if (LocalDebugMode.current) {
                 Spacer(modifier = Modifier.height(16.dp))
                 StyledToggle(
                     label = "[debug] alternate horizontal byte offset",

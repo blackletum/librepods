@@ -5,10 +5,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.navigation3.runtime.NavBackStack
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.serialization.serializer
 import me.kavishdevar.librepods.bluetooth.MacAddress
 import me.kavishdevar.librepods.devices.AppleDevice
@@ -35,7 +33,7 @@ fun NavigationRoot(
     val backStack = rememberScreenNavBackStack(
         when {
             showOnboarding -> Screen.Onboarding
-            showReleaseNotes -> Screen.ReleaseNotes
+//            showReleaseNotes -> Screen.ReleaseNotes // disabled until I figure out better way to present updates WITH NEW CONFIGS so users don't have to go to settings and find out what's new
             else -> Screen.DeviceList
         }
     )
@@ -43,7 +41,7 @@ fun NavigationRoot(
     val connectedDevice = devices.values.firstOrNull { it.connectionState.collectAsState().value == ConnectionState.CONNECTED }
 
     LaunchedEffect(connectedDevice) {
-        if (connectedDevice != null) {
+        if (connectedDevice != null && !showReleaseNotes) {
             val targetScreen = when (connectedDevice) {
                 is AppleDevice -> Screen.AppleScreen(connectedDevice.macAddress)
             }

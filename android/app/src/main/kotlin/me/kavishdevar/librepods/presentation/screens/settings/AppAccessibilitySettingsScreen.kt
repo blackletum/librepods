@@ -1,8 +1,9 @@
-package me.kavishdevar.librepods.presentation.screens
+package me.kavishdevar.librepods.presentation.screens.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -55,7 +56,7 @@ fun AppAccessibilitySettingsScreen(
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Spacer(modifier = Modifier.padding(top = topPadding))
+            Spacer(modifier = Modifier.height(topPadding))
 
             StyledList {
                 styledToggle(
@@ -65,7 +66,7 @@ fun AppAccessibilitySettingsScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.padding(bottom = bottomPadding))
+            Spacer(modifier = Modifier.height(bottomPadding))
         }
     }
 }

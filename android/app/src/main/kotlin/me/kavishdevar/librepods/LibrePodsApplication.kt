@@ -1,6 +1,7 @@
 package me.kavishdevar.librepods
 
 import android.app.Application
+import android.util.Log
 import androidx.health.connect.client.HealthConnectClient
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -8,16 +9,21 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.room3.Room
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.kavishdevar.librepods.billing.BillingManager
 import me.kavishdevar.librepods.billing.BillingProviderFactory
 import me.kavishdevar.librepods.database.LibrePodsDatabase
+import me.kavishdevar.librepods.presentation.overlays.IslandWindow
 import me.kavishdevar.librepods.repository.AppDataRepository
 import me.kavishdevar.librepods.repository.AppleRepository
 import me.kavishdevar.librepods.repository.HeartRateRepository
 import me.kavishdevar.librepods.repository.RecordingRepository
 import me.kavishdevar.librepods.repository.WidgetConfigRepository
+import me.kavishdevar.librepods.services.LibrePodsAccessibilityService
 import me.kavishdevar.librepods.utils.GestureFeedback
 import me.kavishdevar.librepods.utils.XposedServiceHolder
 import me.kavishdevar.librepods.utils.XposedState
@@ -42,6 +48,11 @@ class LibrePodsApplication: Application(), XposedServiceHelper.OnServiceListener
         }
     }
 
+    lateinit var islandWindow: IslandWindow
+        private set
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
     override fun onCreate() {
         System.loadLibrary("hiddenapi")
 
@@ -55,6 +66,21 @@ class LibrePodsApplication: Application(), XposedServiceHelper.OnServiceListener
 
         runBlocking(Dispatchers.IO) {
             appDataRepository.awaitInitialized()
+        }
+
+        islandWindow = IslandWindow(applicationContext, appDataRepository.settings.value)
+
+        scope.launch {
+            LibrePodsAccessibilityService.instance.collect {
+                Log.d("LibrePodsApplication", "LibrePodsAccessibilityService instance: $it")
+                islandWindow.updateContext(it?: applicationContext)
+            }
+        }
+
+        scope.launch {
+            appDataRepository.settings.collect {
+                islandWindow.updateSettings(it)
+            }
         }
 
         BillingManager.provider = BillingProviderFactory.create(this)

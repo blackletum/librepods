@@ -53,7 +53,7 @@ fun StyledList(
 
     val m3eEnabled = LocalDesignSystem.current == DesignSystem.Material
 
-    Column(modifier = modifier) {
+    Column {
         title?.let {
             Box(
                 modifier = Modifier
@@ -70,7 +70,7 @@ fun StyledList(
         }
         val scrollState = rememberScrollState()
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .background(if (m3eEnabled) Color.Transparent else colors.containerColor, RoundedCornerShape(if (m3eEnabled) 24.dp else 28.dp))
                 .clip(RoundedCornerShape(if (m3eEnabled) 24.dp else 28.dp))
@@ -90,16 +90,16 @@ fun StyledList(
             }
             Spacer(modifier = Modifier.height(if(m3eEnabled) 4.dp else 0.dp))
         }
-    }
-    if (!m3eEnabled && description != null) {
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onBackground.copy(0.6f),
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
+        if (!m3eEnabled && description != null) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onBackground.copy(0.6f),
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+        }
     }
 }
 

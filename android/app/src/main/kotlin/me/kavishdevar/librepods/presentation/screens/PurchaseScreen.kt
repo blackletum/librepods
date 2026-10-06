@@ -117,8 +117,8 @@ fun PurchaseScreen(
 
                 StyledList(title = stringResource(R.string.advanced_features), description =  stringResource(R.string.feature_availability_disclaimer)) {
                     styledListItem(
-                        contentText =  stringResource(R.string.conversational_awareness),
-                        supportingText =  stringResource(R.string.conversational_awareness_description),
+                        contentText =  stringResource(R.string.conversation_awareness),
+                        supportingText =  stringResource(R.string.conversation_awareness_description),
                         enabled = false,
                         orientation = StyledListItemOrientation.Vertical
                     )

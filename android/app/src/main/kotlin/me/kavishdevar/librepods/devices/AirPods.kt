@@ -345,6 +345,7 @@ object AirPodsSpecs {
                 )
             ),
             genericIconName = "AirPodsMax",
+            primaryImageRes = R.drawable.img_airpods_max,
             baseCapabilities = setOf(
                 BaseCapability.LISTENING_MODE,
             )
@@ -361,6 +362,7 @@ object AirPodsSpecs {
                 ),
             ),
             genericIconName = "AirPodsMax",
+            primaryImageRes = R.drawable.img_airpods_max,
             baseCapabilities = setOf(
                 BaseCapability.LISTENING_MODE,
             )
@@ -376,7 +378,8 @@ object AirPodsSpecs {
                     label = "Headset"
                 ),
             ),
-            genericIconName = "AirPodsMax2",
+            genericIconName = "AirPodsMax",
+            primaryImageRes = R.drawable.img_airpods_max,
             baseCapabilities = setOf(
                 BaseCapability.LISTENING_MODE,
                 BaseCapability.CONVERSATION_AWARENESS,
@@ -390,7 +393,7 @@ object AirPodsSpecs {
             name = "Unknown AirPods",
             displayName = "Unknown AirPods",
             components = emptySet(),
-            genericIconName = "AirPodsMax2",
+            genericIconName = "AirPodsMax",
             baseCapabilities = setOf(
                 BaseCapability.LISTENING_MODE,
                 BaseCapability.CONVERSATION_AWARENESS,

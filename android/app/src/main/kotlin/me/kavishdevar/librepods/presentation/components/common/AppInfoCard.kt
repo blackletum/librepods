@@ -33,7 +33,7 @@ fun AppInfoCard(
         styledListItem(
             contentText = stringResource(R.string.version),
             supportingText = BuildConfig.VERSION_NAME,
-            onClick = navigateToReleaseNotesScreen
+//            onClick = navigateToReleaseNotesScreen
         )
 
         styledListItem(

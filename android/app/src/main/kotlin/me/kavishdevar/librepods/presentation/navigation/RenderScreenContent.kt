@@ -15,10 +15,6 @@ import me.kavishdevar.librepods.bluetooth.aacp.types.ControlCommandIdentifier
 import me.kavishdevar.librepods.data.updates.updates
 import me.kavishdevar.librepods.devices.AppleDevice
 import me.kavishdevar.librepods.devices.Device
-import me.kavishdevar.librepods.presentation.screens.AppAccessibilitySettingsRoute
-import me.kavishdevar.librepods.presentation.screens.AppAppearanceSettingsRoute
-import me.kavishdevar.librepods.presentation.screens.AppSettingsScreen
-import me.kavishdevar.librepods.presentation.screens.BLESettingsScreenRoute
 import me.kavishdevar.librepods.presentation.screens.DeviceListScreen
 import me.kavishdevar.librepods.presentation.screens.OpenSourceLicensesScreen
 import me.kavishdevar.librepods.presentation.screens.PurchaseScreen
@@ -41,6 +37,15 @@ import me.kavishdevar.librepods.presentation.screens.apple.TransparencySettingsS
 import me.kavishdevar.librepods.presentation.screens.apple.UpdateHearingTestRoute
 import me.kavishdevar.librepods.presentation.screens.apple.VersionScreen
 import me.kavishdevar.librepods.presentation.screens.onboarding.OnboardingScreen
+import me.kavishdevar.librepods.presentation.screens.settings.AppAccessibilitySettingsRoute
+import me.kavishdevar.librepods.presentation.screens.settings.AppAppearanceSettingsRoute
+import me.kavishdevar.librepods.presentation.screens.settings.AppSettingsScreen
+import me.kavishdevar.librepods.presentation.screens.settings.BLESettingsScreenRoute
+import me.kavishdevar.librepods.presentation.screens.settings.IslandSettingsRoute
+import me.kavishdevar.librepods.presentation.screens.settings.island.IslandCompactCustomizeRoute
+import me.kavishdevar.librepods.presentation.screens.settings.island.IslandCompactSizeAndPositionRoute
+import me.kavishdevar.librepods.presentation.screens.settings.island.IslandExpandedCustomizeRoute
+import me.kavishdevar.librepods.presentation.screens.settings.island.IslandExpandedSizeAndPositionRoute
 import me.kavishdevar.librepods.presentation.viewmodel.AppSettingsViewModel
 import me.kavishdevar.librepods.presentation.viewmodel.AppleViewModel
 import me.kavishdevar.librepods.presentation.viewmodel.PurchaseViewModel
@@ -92,7 +97,8 @@ fun RenderScreenContent(
         Screen.Onboarding -> {
             OnboardingScreen {
                 onboardingComplete()
-                if (showReleaseNotes) navigate(Screen.ReleaseNotes) else navigate(Screen.DeviceList)
+//                if (showReleaseNotes) navigate(Screen.ReleaseNotes) else
+                navigate(Screen.DeviceList)
                 backStack.remove(screen)
             }
         }
@@ -175,7 +181,8 @@ fun RenderScreenContent(
                 navigateToReleaseNotesScreen = { navigate(Screen.ReleaseNotes) },
                 navigateToBleSettingsScreen = { navigate(Screen.BLESettings) },
                 navigateToAppAppearanceScreen = { navigate(Screen.AppAppearance) },
-                navigateToAppAccessibilityScreen = { navigate(Screen.AppAccessibilitySettings) }
+                navigateToAppAccessibilityScreen = { navigate(Screen.AppAccessibilitySettings) },
+                navigateToIslandSettingsScreen = { navigate(Screen.IslandSettings) }
             )
         }
 
@@ -429,7 +436,7 @@ fun RenderScreenContent(
             )
         }
 
-        is Screen.AppAccessibilitySettings -> {
+        Screen.AppAccessibilitySettings -> {
             val factory = viewModelFactory {
                 initializer { AppSettingsViewModel(appDataRepository = appDataRepository) }
             }
@@ -440,12 +447,72 @@ fun RenderScreenContent(
             )
         }
 
-        is Screen.AppAppearance -> {
+        Screen.AppAppearance -> {
             val factory = viewModelFactory {
                 initializer { AppSettingsViewModel(appDataRepository = appDataRepository) }
             }
             val appSettingsViewModel: AppSettingsViewModel = viewModel(factory = factory)
             AppAppearanceSettingsRoute(
+                viewModel = appSettingsViewModel,
+                navigateBack = navigateBack
+            )
+        }
+
+        Screen.IslandSettings -> {
+            val factory = viewModelFactory {
+                initializer { AppSettingsViewModel(appDataRepository = appDataRepository) }
+            }
+            val appSettingsViewModel: AppSettingsViewModel = viewModel(factory = factory)
+            IslandSettingsRoute(
+                viewModel = appSettingsViewModel,
+                navigateBack = navigateBack,
+
+                navigateToExpandedSizeAndPosition = { navigate(Screen.IslandExpandedSizeAndPosition) },
+                navigateToCompactSizeAndPosition = { navigate(Screen.IslandCompactSizeAndPosition) },
+                navigateToExpandedCustomize = { navigate(Screen.IslandExpandedCustomize) },
+                navigateToCompactCustomize = { navigate(Screen.IslandCompactCustomize) }
+            )
+        }
+
+        Screen.IslandCompactCustomize -> {
+            val factory = viewModelFactory {
+                initializer { AppSettingsViewModel(appDataRepository = appDataRepository) }
+            }
+            val appSettingsViewModel: AppSettingsViewModel = viewModel(factory = factory)
+            IslandCompactCustomizeRoute(
+                viewModel = appSettingsViewModel,
+                navigateBack = navigateBack
+            )
+        }
+
+        Screen.IslandCompactSizeAndPosition -> {
+            val factory = viewModelFactory {
+                initializer { AppSettingsViewModel(appDataRepository = appDataRepository) }
+            }
+            val appSettingsViewModel: AppSettingsViewModel = viewModel(factory = factory)
+            IslandCompactSizeAndPositionRoute(
+                viewModel = appSettingsViewModel,
+                navigateBack = navigateBack
+            )
+        }
+
+        Screen.IslandExpandedSizeAndPosition -> {
+            val factory = viewModelFactory {
+                initializer { AppSettingsViewModel(appDataRepository = appDataRepository) }
+            }
+            val appSettingsViewModel: AppSettingsViewModel = viewModel(factory = factory)
+            IslandExpandedSizeAndPositionRoute(
+                viewModel = appSettingsViewModel,
+                navigateBack = navigateBack
+            )
+        }
+
+        Screen.IslandExpandedCustomize -> {
+            val factory = viewModelFactory {
+                initializer { AppSettingsViewModel(appDataRepository = appDataRepository) }
+            }
+            val appSettingsViewModel: AppSettingsViewModel = viewModel(factory = factory)
+            IslandExpandedCustomizeRoute(
                 viewModel = appSettingsViewModel,
                 navigateBack = navigateBack
             )

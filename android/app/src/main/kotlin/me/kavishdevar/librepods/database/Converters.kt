@@ -6,8 +6,9 @@ import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import me.kavishdevar.librepods.bluetooth.MacAddress
 import me.kavishdevar.librepods.data.app.AccessibilitySettings
-import me.kavishdevar.librepods.data.apple.AppleCache
 import me.kavishdevar.librepods.data.app.FontSettings
+import me.kavishdevar.librepods.data.app.IslandSettings
+import me.kavishdevar.librepods.data.apple.AppleCache
 import me.kavishdevar.librepods.devices.AppleMetadata
 import me.kavishdevar.librepods.devices.AppleSettings
 import kotlin.time.Instant
@@ -69,5 +70,13 @@ object Converters {
 
     @ColumnTypeConverter
     fun bytesToFontSettings(bytes: ByteArray): FontSettings =
+        cbor.decodeFromByteArray(bytes)
+
+    @ColumnTypeConverter
+    fun islandSettingsToByte(settings: IslandSettings): ByteArray =
+        cbor.encodeToByteArray(settings)
+
+    @ColumnTypeConverter
+    fun bytesToIslandSettings(bytes: ByteArray): IslandSettings =
         cbor.decodeFromByteArray(bytes)
 }

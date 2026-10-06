@@ -1,8 +1,9 @@
-package me.kavishdevar.librepods.presentation.screens
+package me.kavishdevar.librepods.presentation.screens.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -21,10 +22,10 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.debounce
 import me.kavishdevar.librepods.R
 import me.kavishdevar.librepods.presentation.components.primitives.StyledList
-import me.kavishdevar.librepods.presentation.components.primitives.styledListItem
 import me.kavishdevar.librepods.presentation.components.primitives.StyledListItemOrientation
 import me.kavishdevar.librepods.presentation.components.primitives.StyledScaffold
 import me.kavishdevar.librepods.presentation.components.primitives.StyledSlider
+import me.kavishdevar.librepods.presentation.components.primitives.styledListItem
 import me.kavishdevar.librepods.presentation.viewmodel.AppSettingsViewModel
 import kotlin.time.Duration.Companion.seconds
 
@@ -73,7 +74,7 @@ fun BLESettingsScreen(
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Spacer(modifier = Modifier.padding(top = topPadding))
+            Spacer(modifier = Modifier.height(topPadding))
 
             Text(
                 text = stringResource(R.string.do_not_change),
@@ -124,7 +125,7 @@ fun BLESettingsScreen(
                 independent = true // i thought I got rid of all this lol
             )
 
-            Spacer(modifier = Modifier.padding(bottom = bottomPadding))
+            Spacer(modifier = Modifier.height(bottomPadding))
         }
     }
 }

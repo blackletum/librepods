@@ -24,7 +24,7 @@ data class AppleState(
 
     val componentState: Set<DeviceComponentState> = emptySet(),
 
-    val conversationalAwarenessState: Int = 0,
+    val conversationAwarenessState: Int = 0,
 
     val capabilities: Set<CapabilityEntry> = emptySet(),
 

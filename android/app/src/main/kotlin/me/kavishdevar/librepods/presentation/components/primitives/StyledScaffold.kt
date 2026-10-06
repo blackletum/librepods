@@ -18,10 +18,12 @@
 
 package me.kavishdevar.librepods.presentation.components.primitives
 
+import android.annotation.SuppressLint
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -45,7 +47,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -68,7 +69,9 @@ import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -88,7 +91,6 @@ import me.kavishdevar.librepods.presentation.navigation.LocalIsCurrentEntry
 import me.kavishdevar.librepods.presentation.navigation.LocalSharedTransitionScope
 import me.kavishdevar.librepods.presentation.navigation.LocalTransitionProgress
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StyledScaffold(
     modifier: Modifier = Modifier,
@@ -204,15 +206,38 @@ fun StyledScaffold(
                     val backdrop = rememberLayerBackdrop()
                     val bgColor = MaterialTheme.colorScheme.surfaceContainer
 
-//                    val density = LocalDensity.current
-//                    val screenWidthPx = with(density) {
-//                        LocalWindowInfo.current.containerDpSize.width.toPx()
-//                    }
+                    val density = LocalDensity.current
+                    val screenWidthPx = with(density) {
+                        LocalWindowInfo.current.containerDpSize.width.toPx()
+                    }
+
                     val isCurrentEntry = LocalIsCurrentEntry.current
                     val transitionProgress = LocalTransitionProgress.current
-                    val sharedTransitionScope = LocalSharedTransitionScope.current
+                    var sharedTransitionScope = LocalSharedTransitionScope.current
 
                     val showBackButton = if (transitionProgress == 0f) navigateBack != null else !isCurrentEntry
+
+                    @SuppressLint("UnusedSharedTransitionModifierParameter")
+                    if (sharedTransitionScope == null) {
+                        SharedTransitionScope {
+                            sharedTransitionScope = this
+                        }
+                    }
+
+                    sharedTransitionScope = sharedTransitionScope!!
+
+
+                    with(sharedTransitionScope) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .renderInSharedTransitionScopeOverlay(
+                                    zIndexInOverlay = 1f,
+                                    renderInOverlay = { transitionProgress != 0f }
+                                )
+                                .layerBackdrop(backdrop)
+                        )
+                    }
 
                     if (showBackButton) {
                         with(sharedTransitionScope) {
@@ -243,25 +268,27 @@ fun StyledScaffold(
                                         }
                                     )
                                     .graphicsLayer { // AI generated
-                                        if (!isCurrentEntry && navigateBack == null && transitionProgress < 0f) {
+                                        if (!isCurrentEntry && transitionProgress < 0f) {
                                             val progress = (-transitionProgress).coerceIn(0f, 1f)
 
-                                            val eased = progress * progress * (3f - 2f * progress)
+                                            translationX = (screenWidthPx / 3f) * (1f - progress)
 
-                                            val scale = 1f - 0.18f * eased
+                                            if (navigateBack == null) {
+                                                val eased = progress * progress * (3f - 2f * progress)
 
-                                            scaleX = scale
-                                            scaleY = scale
+                                                val scale = 1f - 0.18f * eased
+                                                scaleX = scale
+                                                scaleY = scale
 
-                                            alpha = 1f - 0.28f * eased
+                                                alpha = 1f - 0.28f * eased
 
-                                            val blur = 8f * progress
-
-                                            renderEffect = RenderEffect.createBlurEffect(
-                                                blur,
-                                                blur,
-                                                Shader.TileMode.DECAL
-                                            ).asComposeRenderEffect()
+                                                val blur = 8f * progress
+                                                renderEffect = RenderEffect.createBlurEffect(
+                                                    blur,
+                                                    blur,
+                                                    Shader.TileMode.DECAL
+                                                ).asComposeRenderEffect()
+                                            }
                                         }
                                     }
                             ) {
@@ -294,7 +321,6 @@ fun StyledScaffold(
                             .zIndex(2f)
                             .height(64.dp + topPadding)
                             .fillMaxWidth()
-                            .layerBackdrop(backdrop)
                     ){
                         val scrimColor = MaterialTheme.colorScheme.scrim
 

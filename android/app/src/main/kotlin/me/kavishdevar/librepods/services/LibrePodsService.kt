@@ -1,5 +1,6 @@
 package me.kavishdevar.librepods.services
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
@@ -97,9 +98,6 @@ class LibrePodsService: Service() {
     val rpasByPublicMac = mutableMapOf<MacAddress, MutableSet<MacAddress>>()
 
     val rejectedRandomMac = mutableSetOf<MacAddress>()
-
-    private var islandWindow: IslandWindow? = null
-
     private val eldDecoder = EldDecoder()
 
     private val wavWriters = mutableMapOf<Recording, WavWriter>()
@@ -126,6 +124,22 @@ class LibrePodsService: Service() {
 
     private val healthConnectClient by lazy {
         (application as LibrePodsApplication).healthConnectClient
+    }
+
+    private val islandWindow: IslandWindow by lazy {
+        (application as LibrePodsApplication).islandWindow
+    }
+
+    private fun observeCameraState() {
+        CoroutineScope(Dispatchers.IO).launch {
+            LibrePodsAccessibilityService.isCameraOpen.collect { isCamera ->
+                if (isCamera) {
+                    Log.d(TAG, "Camera is open")
+                } else {
+                    Log.d(TAG, "Camera is closed")
+                }
+            }
+        }
     }
 
     private var isCallRinging = false
@@ -203,13 +217,17 @@ class LibrePodsService: Service() {
             localMac = null // TODO: smart routing. MAC_ADDRESS message gives host mac?
         )
 
-        val telephonyManager = getSystemService(TelephonyManager::class.java)
+        if (
+            checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED &&
+            checkSelfPermission(Manifest.permission.ANSWER_PHONE_CALLS) == PackageManager.PERMISSION_GRANTED
+        ) {
+            val telephonyManager = getSystemService(TelephonyManager::class.java)
 
-        telephonyManager.registerTelephonyCallback(
-            mainExecutor,
-            telephonyCallback
-        )
-
+            telephonyManager.registerTelephonyCallback(
+                mainExecutor,
+                telephonyCallback
+            )
+        }
 
         startForegroundNotification()
     }
@@ -264,8 +282,7 @@ class LibrePodsService: Service() {
             return
         }
 
-        val device =
-            devices.value[MacAddress(bluetoothDevice.address)] ?: createDevice(bluetoothDevice)
+        val device = devices.value[MacAddress(bluetoothDevice.address)] ?: createDevice(bluetoothDevice)
 
         if (device == null) {
             Log.d(TAG, "Unsupported device connected: ${bluetoothDevice.address}")
@@ -454,7 +471,7 @@ class LibrePodsService: Service() {
 
         if (deviceMac == null) {
             irkMap.forEach { (macAddress, irk) ->
-                Log.d(TAG, "Verfiying $bleMac against ${irk.toHexString()}")
+                Log.d(TAG, "Verifiying $bleMac against ${irk.toHexString()}")
                 if (verifyRPA(bleMac.value, irk)) {
                     Log.i(TAG, "New RPA for device ${macAddress.toRedactedString()}")
                     deviceMac = macAddress
@@ -630,6 +647,7 @@ class LibrePodsService: Service() {
                     stopBleScanner()
                     startBleScanner()
                 }
+                islandWindow.updateSettings(settings)
                 oldAppSettings = settings
             }
         }
@@ -675,8 +693,21 @@ class LibrePodsService: Service() {
                     updateWidgets()
 
                     Log.d(TAG, "updating island window")
-                    if (islandWindow?.isVisible == true) {
-                        islandWindow?.updateBattery(state.battery)
+                    if (islandWindow.isVisible) {
+                        val leftBattery = state.battery.find { it.component == BatteryComponent.LEFT }
+                        val rightBattery = state.battery.find { it.component == BatteryComponent.RIGHT }
+
+                        val leftLevel = leftBattery?.level ?: 0
+                        val rightLevel = rightBattery?.level ?: 0
+
+                        val displayBatteryLevel = when {
+                            leftLevel > 0 && rightLevel > 0 -> minOf(leftLevel, rightLevel)
+                            leftLevel > 0 -> leftLevel
+                            rightLevel > 0 -> rightLevel
+                            else -> 0
+                        }
+
+                        islandWindow.updateBattery(displayBatteryLevel)
                     }
 
                     Log.d(TAG, "updating notification")
@@ -769,33 +800,33 @@ class LibrePodsService: Service() {
                     updateDeviceNotification(device = device)
                 }
 
-                state.conversationalAwarenessState != previousState.conversationalAwarenessState -> {
+                state.conversationAwarenessState != previousState.conversationAwarenessState -> {
                     Log.i(
                         TAG,
-                        "conversational awareness state changed for device ${device.macAddress.toRedactedString()}"
+                        "conversation awareness state changed for device ${device.macAddress.toRedactedString()}"
                     )
                     Log.d(
                         TAG,
-                        "conversational awareness state: ${state.conversationalAwarenessState}"
+                        "conversation awareness state: ${state.conversationAwarenessState}"
                     )
 
-                    when (state.conversationalAwarenessState) {
+                    when (state.conversationAwarenessState) {
                         1 -> {
                             MediaController.startSpeaking()
                             MediaController.setVolume(
-                                deviceSettings.conversationalAwarenessVolume.toInt()
+                                deviceSettings.conversationAwarenessVolume.toInt()
                             )
                         }
 
                         2 -> {
                             MediaController.setVolume(
-                                deviceSettings.conversationalAwarenessReducedVolume.toInt()
+                                deviceSettings.conversationAwarenessReducedVolume.toInt()
                             )
                         }
 
                         3 -> {
                             MediaController.setVolume(
-                                deviceSettings.conversationalAwarenessVolume.toInt()
+                                deviceSettings.conversationAwarenessVolume.toInt()
                             )
                         }
 
@@ -926,7 +957,8 @@ class LibrePodsService: Service() {
 
         when (state) {
             is AppleState -> {
-                val state = device.state.value as AppleState
+                val device = device as AppleDevice
+                val state = device.state.value
                 val settings = settings as AppleSettings
                 val metadata = device.metadata.value
 
@@ -943,33 +975,43 @@ class LibrePodsService: Service() {
 
                     Log.i(TAG, "Showing island for device ${device.macAddress.toRedactedString()}")
 
-                    val leftBattery =
-                        state.battery.find { it.component == BatteryComponent.LEFT }?.level ?: 0
-                    val rightBattery =
-                        state.battery.find { it.component == BatteryComponent.RIGHT }?.level ?: 0
+                    val leftBattery = state.battery.find { it.component == BatteryComponent.LEFT }?.level ?: 0
+                    val rightBattery = state.battery.find { it.component == BatteryComponent.RIGHT }?.level ?: 0
                     val batteryPercentage = leftBattery.coerceAtMost(rightBattery)
 
-                    if (islandWindow != null && islandWindow?.isVisible == true) {
-                        Log.i(
-                            TAG,
-                            "Island window already visible, updating instead of creating new one"
-                        )
-                        islandWindow?.forceClose()
-                        return
-                    }
-
-                    islandWindow = IslandWindow(this)
-
-                    islandWindow?.show(
+                    islandWindow.show(
                         name = metadata.name,
-                        batteryPercentage = batteryPercentage,
-                        context = this,
+                        batteryLevel = batteryPercentage,
                         type = type,
                         reversed = reversed,
-                        otherDeviceName = otherDeviceName
+                        otherDeviceName = otherDeviceName,
+
+                        openApp = {
+                            Log.d(TAG, "Opening app")
+                            val intent = Intent(
+                                this,
+                                MainActivity::class.java,
+                            ).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            startActivity(intent)
+                        },
+
+                        showOffListeningMode = state.controlStates[ControlCommandIdentifier.ALLOW_OFF_OPTION]?.getOrNull(0)?.toInt() == 1,
+                        noiseControlModeValue = state.controlStates[ControlCommandIdentifier.LISTENING_MODE]?.getOrNull(0)?.toInt() ?: 3,
+                        onNoiseControlModeChanged = {
+                            device.setControlCommand(
+                                ControlCommandIdentifier.LISTENING_MODE, it
+                            )
+                        },
+                        adaptiveStrength = state.controlStates[ControlCommandIdentifier.AUTO_ANC_STRENGTH]?.getOrNull(0)?.toInt() ?: 50,
+                        onAdaptiveStrengthChanged = {
+                            device.setControlCommand(
+                                ControlCommandIdentifier.AUTO_ANC_STRENGTH, it
+                            )
+                        }
                     )
                 }
-
             }
 
             else -> {
@@ -1210,9 +1252,8 @@ class LibrePodsService: Service() {
 
         Log.d(TAG, "earPresence: $old -> $new")
 
-
         // new != NONE because old!=new
-        if (old == EarPresence.NONE && islandWindow?.isVisible != true) {
+        if (old == EarPresence.NONE) {
             showIsland(
                 device = device,
                 type = IslandType.CONNECTED
@@ -1220,8 +1261,8 @@ class LibrePodsService: Service() {
             Log.i(TAG, "User put in at least one component, showing island.")
         }
 
-        if (new == EarPresence.NONE && islandWindow?.isVisible == true) {
-            islandWindow?.close()
+        if (new == EarPresence.NONE && appDataRepository.settings.value.islandSettings.keepCompactVisible) {
+            islandWindow.close()
         }
 
         var justEnabledA2dp = false

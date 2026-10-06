@@ -11,13 +11,17 @@ import me.kavishdevar.librepods.data.xposed.XposedRemotePrefProvider
 import me.kavishdevar.librepods.database.app.AppSettingsEntity
 import me.kavishdevar.librepods.database.app.AppStateEntity
 import me.kavishdevar.librepods.repository.AppDataRepository
+import me.kavishdevar.librepods.services.LibrePodsAccessibilityService
 
 data class AppUiState(
-    val settings: AppSettingsEntity = AppSettingsEntity(),
     val state: AppStateEntity = AppStateEntity(),
+    val settings: AppSettingsEntity = AppSettingsEntity(),
 
+    val accessibilityServiceAvailable: Boolean = false,
     val vendorIdHook: Boolean = false,
     val isPremium: Boolean = false,
+
+    val showResetDialog: Boolean = false,
 )
 
 class AppSettingsViewModel(
@@ -30,26 +34,46 @@ class AppSettingsViewModel(
         xposedRemotePref.getBoolean("vendor_id_hook", false)
     )
 
-    val uiState = combine(
-        appDataRepository.settings,
+    private var _showResetDialog = MutableStateFlow(false)
+
+    private val appData = combine(
         appDataRepository.state,
-        BillingManager.provider.isPremium,
+        appDataRepository.settings
+    ) { appState, appSettings ->
+        Pair(appState, appSettings)
+    }
+
+    private val extras = combine(
         vendorIdHook,
-    ) { settings, state, isPremium, vendorIdHook ->
+        LibrePodsAccessibilityService.instance,
+    ) {
+        Pair(vendorIdHook, LibrePodsAccessibilityService.instance)
+    }
+
+    val uiState = combine(
+        appData,
+        BillingManager.provider.isPremium,
+        extras,
+        _showResetDialog
+    ) { (state, settings), isPremium, (vendorIdHook, accessibilityService), _showResetDialog ->
         AppUiState(
-            settings = settings,
             state = state,
+            settings = settings,
             isPremium = isPremium,
-            vendorIdHook = vendorIdHook,
+            vendorIdHook = vendorIdHook.value,
+            accessibilityServiceAvailable = accessibilityService.value != null,
+            showResetDialog = _showResetDialog
         )
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
         AppUiState(
-            settings = appDataRepository.settings.value,
             state = appDataRepository.state.value,
+            settings = appDataRepository.settings.value,
             isPremium = BillingManager.provider.isPremium.value,
             vendorIdHook = vendorIdHook.value,
+            accessibilityServiceAvailable = LibrePodsAccessibilityService.instance.value != null,
+            showResetDialog = _showResetDialog.value
         )
     )
 
@@ -64,5 +88,18 @@ class AppSettingsViewModel(
     fun setVendorIdHook(enabled: Boolean) {
         xposedRemotePref.putBoolean("vendor_id_hook", enabled)
         vendorIdHook.value = enabled
+    }
+
+    fun showResetDialog() {
+        _showResetDialog.value = true
+    }
+
+    fun resetDialogDismissed() {
+        _showResetDialog.value = false
+    }
+
+    fun resetAppSettings() {
+        appDataRepository.resetAppSettings()
+        _showResetDialog.value = false
     }
 }

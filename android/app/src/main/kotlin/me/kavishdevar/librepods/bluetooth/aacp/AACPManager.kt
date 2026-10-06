@@ -332,7 +332,7 @@ class AACPManager(private val device: AppleDevice) {
                 )
                 device.updateState {
                     it.copy(
-                        conversationalAwarenessState = payload.getOrElse(3, {0}).toInt(),
+                        conversationAwarenessState = payload.getOrElse(3, {0}).toInt(),
                         aacpPackets = it.aacpPackets + packet
                     )
                 }

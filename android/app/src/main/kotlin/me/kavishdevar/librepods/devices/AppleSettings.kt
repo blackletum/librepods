@@ -33,11 +33,11 @@ data class AppleSettings(
     val takeoverWhenRingingCall: Boolean = true, // takeover_when_ringing_call
     val takeoverWhenMediaStart: Boolean = true, // takeover_when_media_start
 
-    val conversationalAwarenessPauseMusicEnabled: Boolean = false, // conversational_awareness_pause_music
-    val relativeConversationalAwarenessVolumeEnabled: Boolean = true, // relative_conversational_awareness_volume
+    val conversationAwarenessPauseMusicEnabled: Boolean = false, // conversation_awareness_pause_music
+    val relativeConversationAwarenessVolumeEnabled: Boolean = true, // relative_conversation_awareness_volume
 
-    val conversationalAwarenessVolume: Float = 43f,
-    val conversationalAwarenessReducedVolume: Float = 20f,
+    val conversationAwarenessVolume: Float = 43f,
+    val conversationAwarenessReducedVolume: Float = 20f,
 
     val hrmAlertEnabled: Boolean = false,
     @IntRange(from = 120, to = 200) val hrmAlertThreshold: Int = 150,

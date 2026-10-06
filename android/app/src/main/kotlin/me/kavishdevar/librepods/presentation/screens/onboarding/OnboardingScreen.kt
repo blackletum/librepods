@@ -71,12 +71,10 @@ fun OnboardingScreen(
 
     val animationScope = rememberCoroutineScope()
 
-    BackHandler {
+    BackHandler(enabled = state.canScrollBackward) {
         animationScope.launch {
-            if (state.canScrollBackward) {
-                val targetItem = if (isSupported && state.currentItem == 3) 1 else state.currentItem - 1
-                state.animateScrollToItem(targetItem)
-            }
+            val targetItem = if (isSupported && state.currentItem == 3) 1 else state.currentItem - 1
+            state.animateScrollToItem(targetItem)
         }
     }
 

@@ -123,7 +123,7 @@ fun RecordingScreen(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
-            Spacer(modifier = Modifier.padding(top = topPadding))
+            Spacer(modifier = Modifier.height(topPadding))
 
             AnimatedContent(
                 targetState = state.recordingState.isRecording,
@@ -259,7 +259,7 @@ fun RecordingScreen(
                     style = MaterialTheme.typography.labelMedium
                 )
             }
-            Spacer(modifier = Modifier.padding(bottom = bottomPadding))
+            Spacer(modifier = Modifier.height(bottomPadding))
         }
     }
 }

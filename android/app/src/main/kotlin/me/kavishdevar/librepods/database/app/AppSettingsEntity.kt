@@ -2,12 +2,11 @@ package me.kavishdevar.librepods.database.app
 
 import android.bluetooth.le.ScanSettings
 import androidx.compose.ui.graphics.Color
-import androidx.room3.ColumnInfo
 import androidx.room3.Entity
 import androidx.room3.PrimaryKey
 import me.kavishdevar.librepods.data.app.AccessibilitySettings
 import me.kavishdevar.librepods.data.app.FontSettings
-import me.kavishdevar.librepods.database.Converters
+import me.kavishdevar.librepods.data.app.IslandSettings
 import me.kavishdevar.librepods.presentation.design.DesignSystem
 import me.kavishdevar.librepods.presentation.design.NightTheme
 
@@ -30,5 +29,6 @@ data class AppSettingsEntity(
 
     val swipeAnywhereForBack: Boolean = true,
 
-    val accessibilitySettings: AccessibilitySettings = AccessibilitySettings()
+    val accessibilitySettings: AccessibilitySettings = AccessibilitySettings(),
+    val islandSettings: IslandSettings = IslandSettings()
 )

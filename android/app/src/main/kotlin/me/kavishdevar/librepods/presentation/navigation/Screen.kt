@@ -129,6 +129,21 @@ sealed interface Screen: NavKey {
 
     @Serializable
     data object AppAppearance: Screen
+
+    @Serializable
+    data object IslandSettings: Screen
+
+    @Serializable
+    data object IslandCompactCustomize: Screen
+
+    @Serializable
+    data object IslandCompactSizeAndPosition: Screen
+
+    @Serializable
+    data object IslandExpandedCustomize: Screen
+
+    @Serializable
+    data object IslandExpandedSizeAndPosition: Screen
 }
 
 @Serializable

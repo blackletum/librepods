@@ -69,9 +69,11 @@ import me.kavishdevar.librepods.presentation.components.primitives.StyledListIte
 import me.kavishdevar.librepods.presentation.components.primitives.StyledScaffold
 import me.kavishdevar.librepods.presentation.components.primitives.StyledSlider
 import me.kavishdevar.librepods.presentation.components.primitives.StyledToggle
-import me.kavishdevar.librepods.presentation.icons.LocalIcons
 import me.kavishdevar.librepods.presentation.design.DesignSystem
 import me.kavishdevar.librepods.presentation.design.LibrePodsTheme
+import me.kavishdevar.librepods.presentation.design.LocalDesignSystem
+import me.kavishdevar.librepods.presentation.icons.LocalIcons
+import me.kavishdevar.librepods.presentation.utils.LocalDebugMode
 import me.kavishdevar.librepods.presentation.viewmodel.AppleUiState
 import me.kavishdevar.librepods.presentation.viewmodel.AppleViewModel
 import kotlin.time.Duration.Companion.milliseconds
@@ -176,6 +178,8 @@ fun AppleSettingsScreen(
 
     val baseCapabilities = spec.baseCapabilities
 
+    val debugMode = LocalDebugMode.current
+
     StyledScaffold(
         title = uiState.metadata.name,
         navigateBack = navigateBack
@@ -230,6 +234,7 @@ fun AppleSettingsScreen(
                 }
                 item(key = "noise_control") {
                     NoiseControlSettings(
+                        modifier = Modifier.height(100.dp),
                         showOffListeningMode = state.controlStates[ControlCommandIdentifier.ALLOW_OFF_OPTION]?.getOrNull(0)?.toInt() == 1,
                         noiseControlModeValue = state.controlStates[ControlCommandIdentifier.LISTENING_MODE]?.getOrNull(0)?.toInt() ?: 3,
                         onNoiseControlModeChanged = {
@@ -237,13 +242,19 @@ fun AppleSettingsScreen(
                                 ControlCommandIdentifier.LISTENING_MODE, it
                             )
                         },
+                        adaptiveStrength = state.controlStates[ControlCommandIdentifier.AUTO_ANC_STRENGTH]?.getOrNull(0)?.toInt() ?: 50,
+                        onAdaptiveStrengthChanged = {
+                            setControlCommandInt(
+                                ControlCommandIdentifier.AUTO_ANC_STRENGTH, it
+                            )
+                        }
                     )
                 }
 
                 if (baseCapabilities.contains(BaseCapability.ADAPTIVE_AUDIO)) {
                     item(key = "adaptive_strength") {
                         AnimatedVisibility(
-                            visible = state.controlStates[ControlCommandIdentifier.LISTENING_MODE]?.getOrNull(0)?.toInt() == 4,
+                            visible = state.controlStates[ControlCommandIdentifier.LISTENING_MODE]?.getOrNull(0)?.toInt() == 4 && LocalDesignSystem.current == DesignSystem.Material,
                             enter = remember {
                                 fadeIn() + slideInVertically()
                             },
@@ -384,15 +395,15 @@ fun AppleSettingsScreen(
             item(key = "spacer_audio") { Spacer(modifier = Modifier.height(16.dp)) }
             item(key = "audio") {
                 val adaptiveVolumeCapability = baseCapabilities.contains(BaseCapability.ADAPTIVE_VOLUME)
-                val conversationalAwarenessCapability = baseCapabilities.contains(BaseCapability.CONVERSATION_AWARENESS)
+                val conversationAwarenessCapability = baseCapabilities.contains(BaseCapability.CONVERSATION_AWARENESS)
                 val loudSoundReductionCapability = baseCapabilities.contains(BaseCapability.LOUD_SOUND_REDUCTION)
 
                 val adaptiveVolumeChecked = state.controlStates[ControlCommandIdentifier.ADAPTIVE_VOLUME_CONFIG]?.getOrNull(0) == 0x01.toByte()
-                val conversationalAwarenessChecked = state.controlStates[ControlCommandIdentifier.CONVERSATION_DETECT_CONFIG]?.getOrNull(0) == 0x01.toByte()
+                val conversationAwarenessChecked = state.controlStates[ControlCommandIdentifier.CONVERSATION_DETECT_CONFIG]?.getOrNull(0) == 0x01.toByte()
 
                 AudioSettings(
                     adaptiveVolumeCapability = adaptiveVolumeCapability,
-                    conversationalAwarenessCapability = conversationalAwarenessCapability,
+                    conversationAwarenessCapability = conversationAwarenessCapability,
                     loudSoundReductionCapability = loudSoundReductionCapability,
                     customEqCapability = metadata.version3.isNotBlank() && metadata.version3.first().digitToInt() >= 9,
                     adaptiveVolumeChecked = adaptiveVolumeChecked,
@@ -402,8 +413,8 @@ fun AppleSettingsScreen(
                             checked
                         )
                     },
-                    conversationalAwarenessChecked = conversationalAwarenessChecked && uiState.isPremium,
-                    onConversationalAwarenessCheckedChange = { checked ->
+                    conversationAwarenessChecked = conversationAwarenessChecked && uiState.isPremium,
+                    onConversationAwarenessCheckedChange = { checked ->
                         setControlCommandBoolean(
                             ControlCommandIdentifier.CONVERSATION_DETECT_CONFIG,
                             checked
@@ -555,7 +566,7 @@ fun AppleSettingsScreen(
 
             item(key = "spacer_debug") { Spacer(modifier = Modifier.height(16.dp)) }
 
-            if (uiState.appSettings.debugMode) {
+            if (debugMode) {
                 item(key = "show_cached_battery") {
                     StyledToggle(
                         label = "show cached battery",

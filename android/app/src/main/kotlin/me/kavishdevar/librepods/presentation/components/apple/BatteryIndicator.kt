@@ -51,10 +51,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.kavishdevar.librepods.devices.BatteryStatus
-import me.kavishdevar.librepods.presentation.icons.LocalIcons
-import me.kavishdevar.librepods.presentation.icons.richText
 import me.kavishdevar.librepods.presentation.design.DesignSystem
 import me.kavishdevar.librepods.presentation.design.LibrePodsTheme
+import me.kavishdevar.librepods.presentation.icons.LocalIcons
+import me.kavishdevar.librepods.presentation.icons.richText
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
@@ -66,6 +66,7 @@ fun BatteryIndicator(
     status: BatteryStatus,
     imageVectorName: String? = null,
     previousCharging: Boolean = false,
+    showLabel: Boolean = true
 ) {
     val isDarkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val batteryFillColor =
@@ -82,11 +83,14 @@ fun BatteryIndicator(
     }
 
     Column(
-        modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer).padding(4.dp), // just for haze to work
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.surfaceContainer) // just for haze to work
+            .padding(4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
-            modifier = Modifier.padding(bottom = 4.dp), contentAlignment = Alignment.Center
+            modifier = Modifier.padding(bottom = 4.dp),
+            contentAlignment = Alignment.Center
         ) {
             val strokeWidthPx = with(LocalDensity.current) { 4.dp.toPx() }
             val gapFromCenterPx = with(LocalDensity.current) { 8.sp.toPx() }
@@ -125,7 +129,6 @@ fun BatteryIndicator(
                         style = stroke
                     )
 
-                    // ---- PILL MARKER AT 80% ----
                     val angleDeg = startAngle + 360f * optimizedLimit
                     val angleRad = Math.toRadians(angleDeg.toDouble())
 
@@ -181,24 +184,25 @@ fun BatteryIndicator(
                     .size(14.dp)
                     .scale(scaleAnim.value)
             )
-
         }
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        Row {
-            val richText = if (imageVectorName != null) {
-                richText("\\icon{$imageVectorName,onSurface} $batteryPercentage%")
-            } else {
-                richText("$batteryPercentage%")
-            }
+        if (showLabel) {
+            Row {
+                val richText = if (imageVectorName != null) {
+                    richText("\\icon{$imageVectorName,onSurface} $batteryPercentage%")
+                } else {
+                    richText("$batteryPercentage%")
+                }
 
-            Text(
-                text = richText.text,
-                inlineContent = richText.inlineContent,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+                Text(
+                    text = richText.text,
+                    inlineContent = richText.inlineContent,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
     }
 }
@@ -206,7 +210,7 @@ fun BatteryIndicator(
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun BatteryIndicatorPreview() {
-    LibrePodsTheme(designSystem = DesignSystem.Material) {
+    LibrePodsTheme(designSystem = DesignSystem.Apple) {
         BatteryIndicator(
             batteryPercentage = 50,
             status = BatteryStatus.OPTIMIZED_CHARGING,

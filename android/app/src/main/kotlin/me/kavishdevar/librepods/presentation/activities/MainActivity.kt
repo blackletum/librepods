@@ -16,8 +16,6 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-@file:OptIn(ExperimentalEncodingApi::class)
-
 package me.kavishdevar.librepods.presentation.activities
 
 //import dagger.hilt.android.AndroidEntryPoint
@@ -37,6 +35,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -47,24 +46,23 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.google.android.play.core.review.ReviewManagerFactory
-import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import me.kavishdevar.librepods.BuildConfig
 import me.kavishdevar.librepods.LibrePodsApplication
 import me.kavishdevar.librepods.presentation.design.LibrePodsTheme
 import me.kavishdevar.librepods.presentation.design.NightTheme
 import me.kavishdevar.librepods.presentation.navigation.NavigationRoot
+import me.kavishdevar.librepods.presentation.utils.LocalDebugMode
 import me.kavishdevar.librepods.repository.AppDataRepository
 import me.kavishdevar.librepods.services.LibrePodsService
 import me.kavishdevar.librepods.utils.XposedState
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Duration.Companion.hours
 
 private lateinit var serviceConnection: ServiceConnection
 private lateinit var connectionStatusReceiver: BroadcastReceiver
 //lateinit var testReviewReceiver: BroadcastReceiver
 
-class MainActivity : ComponentActivity() {
+class MainActivity: ComponentActivity() {
     companion object {
         init {
             if (XposedState.isAvailable && XposedState.bluetoothScopeEnabled) {
@@ -74,7 +72,7 @@ class MainActivity : ComponentActivity() {
     }
 
     val appDataRepository by lazy { (application as LibrePodsApplication).appDataRepository }
-    @ExperimentalHazeMaterialsApi
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -113,19 +111,23 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            LibrePodsTheme(
-                designSystem = settings.designSystem,
-                overrideMaterialColor = settings.overrideMaterialColor,
-                accessibilitySettings = settings.accessibilitySettings,
-                fontSettings = settings.fontSettings,
-                darkTheme = darkTheme
+            CompositionLocalProvider(
+                LocalDebugMode provides settings.debugMode
             ) {
+                LibrePodsTheme(
+                    designSystem = settings.designSystem,
+                    overrideMaterialColor = settings.overrideMaterialColor,
+                    accessibilitySettings = settings.accessibilitySettings,
+                    fontSettings = settings.fontSettings,
+                    darkTheme = darkTheme
+                ) {
 //                For demo screenshots
 //                val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
 //                windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 //                windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
 
-                Main()
+                    Main()
+                }
             }
         }
     }

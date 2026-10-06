@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -133,7 +134,7 @@ fun DeviceListScreen(
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
-            Spacer(modifier = Modifier.padding(top = topPadding))
+            Spacer(modifier = Modifier.height(topPadding))
 
             Log.d("DeviceListScreen", "Rendering device list with ${devices.size} devices")
 
@@ -480,15 +481,16 @@ fun DeviceListScreen(
                                 val deviceMetadata = deviceMetadata as AppleMetadata
 
                                 val listeningModeCapability = AirPodsSpecs.getSpec(deviceMetadata.model).baseCapabilities.contains(BaseCapability.LISTENING_MODE)
-                                val conversationalAwarenessCapability = AirPodsSpecs.getSpec(deviceMetadata.model).baseCapabilities.contains(BaseCapability.CONVERSATION_AWARENESS)
+                                val conversationAwarenessCapability = AirPodsSpecs.getSpec(deviceMetadata.model).baseCapabilities.contains(BaseCapability.CONVERSATION_AWARENESS)
                                 val hrmCapability = AirPodsSpecs.getSpec(deviceMetadata.model).baseCapabilities.contains(BaseCapability.HRM)
 
-                                if (conversationalAwarenessCapability || hrmCapability) {
+                                if (conversationAwarenessCapability || hrmCapability) {
                                     StyledList {
                                         if (listeningModeCapability) {
                                             styledListItem(
                                                 content = {
                                                     NoiseControlSettings(
+                                                        modifier = Modifier.padding(vertical = 8.dp).height(64.dp),
                                                         showOffListeningMode = deviceState.controlStates[ControlCommandIdentifier.LISTENING_MODE]?.get(0) == 1.toByte(),
                                                         noiseControlModeValue = deviceState.controlStates[ControlCommandIdentifier.LISTENING_MODE]?.get(0)?.toInt() ?: 2,
                                                         onNoiseControlModeChanged = { newMode ->
@@ -499,14 +501,23 @@ fun DeviceListScreen(
                                                                 )
                                                             }
                                                         },
+                                                        adaptiveStrength = deviceState.controlStates[ControlCommandIdentifier.AUTO_ANC_STRENGTH]?.get(0)?.toInt() ?: 50,
+                                                        onAdaptiveStrengthChanged = {
+                                                            CoroutineScope(Dispatchers.IO).launch {
+                                                                (device as AppleDevice).setControlCommand(
+                                                                    ControlCommandIdentifier.AUTO_ANC_STRENGTH,
+                                                                    it
+                                                                )
+                                                            }
+                                                        },
                                                         showLabels = false
                                                     )
                                                 }
                                             )
                                         }
-                                        if (conversationalAwarenessCapability) {
+                                        if (conversationAwarenessCapability) {
                                             styledToggle(
-                                                label = stringResource(R.string.conversational_awareness),
+                                                label = stringResource(R.string.conversation_awareness),
                                                 checked = deviceState.controlStates[ControlCommandIdentifier.CONVERSATION_DETECT_CONFIG]?.get(
                                                     0
                                                 ) == 1.toByte(),

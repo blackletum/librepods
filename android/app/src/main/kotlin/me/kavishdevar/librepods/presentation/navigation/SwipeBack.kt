@@ -2,7 +2,6 @@ package me.kavishdevar.librepods.presentation.navigation
 
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -14,6 +13,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -61,29 +61,13 @@ class SwipeBackSceneStrategy<T : Any>(
         }
 
         previousEntries = entries
-//
-//        if (previousEntry == null) {
-//            return object : Scene<T> {
-//                override val key: Any
-//                    get() = "${currentEntry.contentKey}_${currentEntry.hashCode()}"
-//
-//                override val entries: List<NavEntry<T>>
-//                    get() = listOf(currentEntry)
-//
-//                override val previousEntries: List<NavEntry<T>>
-//                    get() = emptyList()
-//
-//                override val content: @Composable () -> Unit
-//                    get() = { currentEntry.Content() }
-//            }
-//        }
 
         return object : Scene<T> {
             override val key: Any
                 get() = "${currentEntry.contentKey}_${currentEntry.hashCode()}"
 
             override val entries: List<NavEntry<T>>
-                get() = listOfNotNull(previousEntry, currentEntry)
+                get() = entries
 
             override val previousEntries: List<NavEntry<T>>
                 get() = listOfNotNull(previousEntry)
@@ -135,6 +119,10 @@ private fun <T : Any> SwipeBackSceneContent(
         )
     }
 
+    var pushCompleted by remember {
+        mutableStateOf(direction != Direction.Forward)
+    }
+
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(
@@ -150,6 +138,7 @@ private fun <T : Any> SwipeBackSceneContent(
             )
 
             transitionProgress = 0f
+            pushCompleted = true
         }
     }
 
@@ -221,13 +210,12 @@ private fun <T : Any> SwipeBackSceneContent(
                     Modifier
                         .fillMaxSize()
                         .graphicsLayer {
-                            translationX =
-                                if (direction == Direction.Forward) {
-                                    0f
-                                } else {
-                                    (-screenWidthPx / 3f) +
-                                        (animatedOffset.value / 3f)
-                                }
+                            if (direction == Direction.Forward && !pushCompleted) {
+                                translationX = 0f
+                            } else {
+                                val progress = (animatedOffset.value / screenWidthPx).coerceIn(0f, 1f)
+                                translationX = -(screenWidthPx / 3f) * (1f - progress)
+                            }
                         }
                 ) {
                     previousEntry?.Content()
@@ -249,42 +237,28 @@ private fun <T : Any> SwipeBackSceneContent(
                             orientation = Orientation.Horizontal,
                             onDragStopped = { velocity ->
                                 val currentOffset = animatedOffset.value
-                                val currentProgress =
-                                    (currentOffset / screenWidthPx).coerceIn(0f, 1f)
-
-                                val shouldDismiss =
-                                    currentOffset > screenWidthPx * 0.35f ||
-                                        velocity > 1000f
+                                val shouldDismiss = currentOffset > screenWidthPx * 0.35f || velocity > 1000f
 
                                 scope.launch {
                                     if (shouldDismiss) {
-                                        animate(
-                                            initialValue = currentProgress,
-                                            targetValue = 1f,
-                                            animationSpec = tween(150)
-                                        ) { value, _ ->
-                                            transitionProgress = -value
-                                            scope.launch {
-                                                animatedOffset.snapTo(value * screenWidthPx)
-                                            }
+                                        animatedOffset.animateTo(
+                                            targetValue = screenWidthPx,
+                                            animationSpec = tween(150),
+                                            initialVelocity = velocity
+                                        ) {
+                                            transitionProgress = -(value / screenWidthPx).coerceIn(0f, 1f)
                                         }
-
                                         transitionProgress = -1f
                                         onDismiss()
                                     } else {
-                                        animate(
-                                            initialValue = currentProgress,
+                                        animatedOffset.animateTo(
                                             targetValue = 0f,
-                                            animationSpec = tween(150)
-                                        ) { value, _ ->
-                                            transitionProgress = -value
-                                            scope.launch {
-                                                animatedOffset.snapTo(value * screenWidthPx)
-                                            }
+                                            animationSpec = tween(150),
+                                            initialVelocity = velocity
+                                        ) {
+                                            transitionProgress = -(value / screenWidthPx).coerceIn(0f, 1f)
                                         }
-
                                         transitionProgress = 0f
-                                        animatedOffset.snapTo(0f)
                                     }
                                 }
                             }

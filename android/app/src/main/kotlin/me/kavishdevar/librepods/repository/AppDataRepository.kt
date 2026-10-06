@@ -62,4 +62,8 @@ class AppDataRepository(
             stateDao.upsert(newState)
         }
     }
+
+    fun resetAppSettings() {
+        updateSettings { AppSettingsEntity() }
+    }
 }

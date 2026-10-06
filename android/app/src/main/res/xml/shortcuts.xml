@@ -1,0 +1,13 @@
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+<!--    <shortcut-->
+<!--        android:shortcutId="test"-->
+<!--        android:enabled="true"-->
+<!--        android:icon="@drawable/ic_smartphone"-->
+<!--        android:shortcutShortLabel="@string/test">-->
+
+<!--        <intent-->
+<!--            android:action="android.intent.action.VIEW"-->
+<!--            android:targetPackage="me.kavishdevar.librepods"-->
+<!--            android:targetClass="me.kavishdevar.librepods.presentation.activities.TestActivity" />-->
+<!--    </shortcut>-->
+</shortcuts>
